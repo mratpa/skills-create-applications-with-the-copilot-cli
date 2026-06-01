@@ -11,7 +11,8 @@ const [,, op, a, b] = process.argv;
 
 function usage() {
   console.error('Usage: node src/calculator.js <operation> <num1> <num2>');
-  console.error('Operations: add, subtract, multiply, divide');
+  console.error('Operations: add, subtract, multiply, divide, modulo, power, sqrt');
+  console.error('For sqrt use: node src/calculator.js sqrt <num>');
 }
 
 // Arithmetic functions exported for testing and reuse
@@ -28,26 +29,40 @@ function divide(n1, n2) {
   if (n2 === 0) throw new Error('division by zero');
   return n1 / n2;
 }
+function modulo(n1, n2) {
+  if (n2 === 0) throw new Error('modulo by zero');
+  return n1 % n2;
+}
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+function squareRoot(n) {
+  if (n < 0) throw new Error('square root of negative number');
+  return Math.sqrt(n);
+}
 
 // CLI behavior when run directly
 if (require.main === module) {
-  if (!op || a === undefined || b === undefined) {
+  const opLower = op && String(op).toLowerCase();
+  const unaryOps = new Set(['sqrt', 's', 'squareroot']);
+
+  if (!op || (unaryOps.has(opLower) ? a === undefined : (a === undefined || b === undefined))) {
     usage();
     process.exitCode = 1;
     process.exit();
   }
 
   const n1 = Number(a);
-  const n2 = Number(b);
-  if (!Number.isFinite(n1) || !Number.isFinite(n2)) {
-    console.error('Error: both operands must be valid numbers.');
+  const n2 = b === undefined ? undefined : Number(b);
+  if (!Number.isFinite(n1) || (n2 !== undefined && !Number.isFinite(n2))) {
+    console.error('Error: operand(s) must be valid numbers.');
     process.exitCode = 2;
     process.exit();
   }
 
   let result;
   try {
-    switch (op.toLowerCase()) {
+    switch (opLower) {
       case 'add':
       case '+':
         result = add(n1, n2);
@@ -68,6 +83,22 @@ if (require.main === module) {
       case '/':
         result = divide(n1, n2);
         break;
+      case 'modulo':
+      case 'mod':
+      case '%':
+        result = modulo(n1, n2);
+        break;
+      case 'power':
+      case 'pow':
+      case '^':
+      case '**':
+        result = power(n1, n2);
+        break;
+      case 'sqrt':
+      case 's':
+      case 'squareroot':
+        result = squareRoot(n1);
+        break;
       default:
         console.error(`Unknown operation: ${op}`);
         usage();
@@ -86,4 +117,4 @@ if (require.main === module) {
 }
 
 // Export functions for tests
-module.exports = { add, subtract, multiply, divide };
+module.exports = { add, subtract, multiply, divide, modulo, power, squareRoot };
